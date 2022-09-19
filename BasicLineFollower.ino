@@ -2,14 +2,13 @@
 #include <Streaming.h>
 
 // DON'T CHANGE
-const int BLACK = 0;
-const int WHITE = 1;
+const int BLACK = 1;
+const int WHITE = 0;
 const int CENTER = 0;
 const int LEFT = -1;
 const int RIGHT = 1;
 const int BACKWARD = 0;
 const int FORWARD = 1;
-
 
 const int NUM_SENSORS = 7;
 const int PREFERENCE_LEFT[NUM_SENSORS] = {0, 1, 2, 3, 4, 5, 6};
@@ -20,24 +19,23 @@ const int PREFERENCE_CENTER[NUM_SENSORS] = {3, 2, 4, 1, 5, 0, 6};
 const int LINE_COLOR = BLACK;
 
 // From left to right 
-const int SENSOR_PINS[NUM_SENSORS] = {6, 7, 8, 9, 10, 11, 12};
-const int MOTOR_LEFT_DIRECTION_PIN = 4;
-const int MOTOR_LEFT_SPEED_PIN = 4;
-const int MOTOR_RIGHT_DIRECTION_PIN = 4;
-const int MOTOR_RIGHT_SPEED_PIN = 4;
+const int SENSOR_PINS[NUM_SENSORS] = {4, 5, 6, 7, 8, 9, 10};
+const int MOTOR_LEFT_DIRECTION_PIN = 13;
+const int MOTOR_LEFT_SPEED_PIN = 11;
+const int MOTOR_RIGHT_DIRECTION_PIN = 12;
+const int MOTOR_RIGHT_SPEED_PIN = 3;
 
 // Sensor                          LOST   L3   L2   L1  CEN   R1   R2   R3  LOST
 // Indexes                            0    1    2    3    4    5    6    7     8
 int LEFT_SPEEDS[NUM_SENSORS+2]  = {-100,   0,  50,  80, 100, 100, 100, 100,  100};
 int RIGHT_SPEEDS[NUM_SENSORS+2] = { 100, 100, 100, 100, 100,  80,  50,   0, -100};
 
-
 uint8_t CurrentReadings;
 uint8_t PreviousReadings;
 int LastDetection = CENTER;
 
 bool DEBUG = true;
-int Preference;
+int Preference = CENTER;
 
 //Ardumoto Motors;
 
@@ -45,6 +43,8 @@ void SetMotorSpeed(int idx)
 {
     //Motors.setSpeed('A', LEFT_SPEEDS[idx]);
     //Motors.setSpeed('B', RIGHT_SPEEDS[idx]);
+
+    Serial << "Left Motor: " << LEFT_SPEEDS[idx] << "  Right Motor: " << RIGHT_SPEEDS[idx] << endl;
 
     if (LEFT_SPEEDS[idx] < 0) 
         digitalWrite(MOTOR_LEFT_DIRECTION_PIN, BACKWARD); 
@@ -70,6 +70,7 @@ void ReadSensors()
 
 void SendSensorReadings()
 {
+    Serial << "Sensors: ";
     for(int i=0; i<NUM_SENSORS; i++)
     {
        Serial << bitRead(CurrentReadings, i) << " ";
@@ -88,6 +89,7 @@ void SetupMode()
               LEFT_SPEEDS[3] << LEFT_SPEEDS[4] << endl;
     Serial << endl << ">> ";
 }
+
 
 void setup()
 {
@@ -109,7 +111,7 @@ void setup()
 void loop()
 {
     ReadSensors();
-    if (DEBUG && CurrentReadings != PreviousReadings)
+    if (DEBUG) //&& CurrentReadings != PreviousReadings)
         SendSensorReadings();
     
     int idx;
@@ -131,7 +133,8 @@ void loop()
             else
                 LastDetection = CENTER;
             
-            SetMotorSpeed(idx);
+            SetMotorSpeed(idx+1);
+            delay(500);
             return;
         }
     }
@@ -145,6 +148,8 @@ void loop()
     {
         SetMotorSpeed(0);
     }
+
+    delay(500);
 }
 
 void serialEvent() 
